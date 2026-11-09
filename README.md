@@ -154,32 +154,27 @@
 
 ## 5. 빌드 및 실행
 
-> 빌드 도구 확정 후 갱신. (Gradle 또는 Maven 권장 — JUnit 연동 및 팀원 환경 통일 목적)
+Gradle Wrapper를 쓰므로 **Gradle을 따로 설치할 필요 없음.** JDK만 있으면 된다.
 
-**요구 환경**
-
-- JDK `TBD` (예: 17)
-- JUnit `TBD` (예: 5)
-
-빌드 도구 도입 전 임시 방법 (JDK 25에서 확인함 — 경고만 나고 오류 없음):
-
-```bash
-javac -encoding UTF-8 -d out $(find src/main/java -name '*.java')
-java -cp out com.holub.life.Life
-```
-
-빌드 도구 확정 후:
+| 항목 | 버전 |
+|---|---|
+| JDK | **17 이상** (17, 25에서 확인). 바이트코드는 Java 17 대상으로 컴파일 |
+| Gradle | 9.5.1 (Wrapper가 자동으로 내려받음) |
+| JUnit | Jupiter 5.13.4 |
 
 ```bash
-# 빌드
-TBD
+./gradlew run       # 게임 실행
+./gradlew test      # 테스트 실행 (headless, 화면 없이)
+./gradlew build     # 컴파일 + 테스트 + jar 생성
 
-# 실행
-TBD
-
-# 테스트
-TBD
+java -jar build/libs/holub-life-1.02.jar   # build 후 jar로 실행
 ```
+
+> Windows에서는 `./gradlew` 대신 `gradlew.bat`.
+> 컴파일할 때 나오는 deprecation / unchecked 경고는 원본 코드(Java 1.4) 때문이고 정상이다.
+
+- 테스트 결과 리포트: `build/reports/tests/test/index.html` (문서용 스크린샷 찍을 때 사용)
+- IntelliJ: 프로젝트 폴더를 열면 Gradle 프로젝트로 자동 인식된다.
 
 ---
 
@@ -200,11 +195,13 @@ TBD
 
 ## 7. 디렉터리 구조
 
-> 원본 소스 반영 후 확정.
-
 ```text
 .
 ├── README.md
+├── build.gradle.kts        # Gradle 빌드 설정
+├── settings.gradle.kts
+├── gradlew, gradlew.bat    # Gradle Wrapper 실행 스크립트
+├── gradle/wrapper/         # Wrapper 설정 (커밋 대상)
 ├── src/
 │   ├── main/java/          # 원본 + 확장 소스
 │   └── test/java/          # JUnit 테스트

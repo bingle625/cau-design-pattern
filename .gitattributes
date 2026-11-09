@@ -2,3 +2,4 @@
 *.java text eol=lf
 *.pdf binary
 *.jar binary
+*.bat text eol=crlf
