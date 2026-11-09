@@ -72,36 +72,43 @@
 
 ## 3. 원본 Holub Life Game 분석
 
-> 원본 소스 확보 후 코드를 직접 읽고 갱신할 것. 아래는 *Holub on Patterns* 기준 초기 분석이다.
+> 원본: [`HolubLife.jar`](https://holub.com/software/life/HolubLife.jar) v1.02 (2005-07-16). `src/main/java/com/holub/**`에 원본 그대로 반입함 (커밋 `ef7d962`).
+> 출처, 링크, 아이디어 정리는 [`docs/reference/resources.md`](docs/reference/resources.md) 참고.
 
 ### 주요 패키지
 
-| 패키지 | 역할 |
-|---|---|
-| `com.holub.life` | 게임 모델 및 실행 (`Life`, `Universe`, `Cell`, `Neighborhood`, `Resident`, `Clock`, `Direction`, `Storable` 등) |
-| `com.holub.ui` | 메뉴/UI 유틸리티 (`MenuSite`, `Colors` 등) |
-| `com.holub.io` | 파일 입출력 유틸리티 |
-| `com.holub.asynch`, `com.holub.tools` | 동시성 및 기타 유틸리티 |
+| 패키지 | 클래스 | 역할 |
+|---|---|---|
+| `com.holub.life` | `Life`, `Universe`, `Cell`, `Neighborhood`, `Resident`, `Clock`, `Direction`, `Storable` | 게임 모델과 실행. `Life`가 진입점(`JFrame`) |
+| `com.holub.ui` | `MenuSite`, `Colors` | 메뉴 관리, 색상 상수 |
+| `com.holub.tools` | `Publisher`, `Log` | Observer 구독자 관리, 로깅 |
+| `com.holub.io` | `Files` | 파일 선택 다이얼로그 |
+| `com.holub.asynch` | `ConditionVariable` | 동기화 유틸리티 |
 
-### 원본에 이미 적용된 패턴 (확인 필요)
+### 원본에 이미 적용된 패턴
 
-| 패턴 | 적용 위치 (추정) |
+> 코드에서 위치만 확인한 상태. 세부 분석은 진행 중.
+
+| 패턴 | 적용 위치 |
 |---|---|
-| Composite | `Cell` ← `Neighborhood`(복합) / `Resident`(단말) |
-| Singleton | `Universe`, `Clock` |
-| Observer | `Clock`의 tick 구독 (`Publisher`) |
-| Memento | `Cell.Memento`, `Storable`을 통한 저장/불러오기 |
-| Null Object | `Cell.DUMMY` |
-| Facade | `MenuSite` (메뉴 관리) |
+| Composite | `Cell` 인터페이스 ← `Neighborhood`(복합) / `Resident`(단말) |
+| Singleton | `Clock.instance()`, `Universe.instance()` |
+| Observer | `Clock.addClockListener()` + `Clock.Listener`, `tools.Publisher`로 구독자에게 알림 |
+| Memento | `Cell.Memento` (← `Storable`), `Neighborhood.NeighborhoodState` |
+| Null Object | `Cell.DUMMY` — 항상 죽어 있는 셀. 경계 밖 이웃으로 쓰임 |
+| Facade | `MenuSite` — 메뉴 추가/삭제를 감쌈 |
 
 ### 원본 기능 (회귀 테스트 대상)
 
-- [ ] 셀 클릭으로 생/사 토글
-- [ ] 시뮬레이션 시작 / 정지 / 한 세대 진행(tick)
-- [ ] 속도 조절
-- [ ] 보드 초기화(clear)
-- [ ] 파일로 저장 / 불러오기
-- [ ] `TBD` — 코드 분석 후 추가
+| 메뉴 / 조작 | 기능 | 구현 위치 |
+|---|---|---|
+| 마우스 클릭 | 셀 생/사 토글 | `Universe`, `Cell.userClicked` |
+| Grid → Clear | 보드 초기화 | `Universe` |
+| Grid → Load / Store | `.life` 파일 불러오기 / 저장 | `Universe`, `Storable` |
+| Grid → Exit | 종료 | `Universe` |
+| Go → Halt | 정지 | `Clock` |
+| Go → Tick (Single Step) | 한 세대 진행 | `Clock` |
+| Go → Agonizing / Slow / Medium / Fast | 실행 속도 선택 | `Clock` |
 
 ### 설계상 문제점 (개선 후보)
 
@@ -129,13 +136,16 @@
 |---|---|
 | 생존 규칙 교체 (B3/S23, HighLife B36/S23, Seeds 등) | Strategy |
 | 실행 취소 / 다시 실행 (Undo/Redo) | Command, Memento |
-| 패턴 프리셋 배치 (Glider, Blinker, Gosper Gun 등) | Prototype, Factory |
-| 다양한 파일 포맷 지원 (RLE, Plaintext `.cells`) | Adapter, Strategy, Template Method |
+| 패턴 라이브러리 배치 (Glider, Blinker, Gosper Gun 등) | Prototype, Command |
+| 다양한 파일 포맷 지원 (RLE, Life 1.06, Plaintext `.cells`) | Adapter, Factory Method |
 | 시뮬레이션 상태 관리 (Running / Paused / Stepping) | State |
-| 통계 패널 (세대 수, 살아있는 셀 수) | Observer |
+| 세대 통계, 히스토리 패널 (세대 수, 살아있는 셀 수) | Observer (기존 `Clock` 확장) |
 | 셀 렌더링 테마 / 나이별 색상 | Decorator, Strategy |
-| 보드 경계 방식 (토러스 / 고정 벽) | Strategy |
+| 보드 경계 방식 (토러스 / 고정 벽) | Strategy, Template Method |
+| 진화 알고리즘 교체 (기본 vs 최적화) | Strategy, Bridge — 두 구현의 결과가 같은지 JUnit으로 검증 |
 | 모델-UI 분리로 독립 테스트 가능하게 | MVC, Dependency Injection, DIP |
+
+출처별 정리는 [`docs/reference/resources.md`](docs/reference/resources.md#3-링크--설계패턴-확장-아이디어) 참고.
 
 </details>
 
@@ -149,6 +159,15 @@
 
 - JDK `TBD` (예: 17)
 - JUnit `TBD` (예: 5)
+
+빌드 도구 도입 전 임시 방법 (JDK 25에서 확인함 — 경고만 나고 오류 없음):
+
+```bash
+javac -encoding UTF-8 -d out $(find src/main/java -name '*.java')
+java -cp out com.holub.life.Life
+```
+
+빌드 도구 확정 후:
 
 ```bash
 # 빌드
@@ -296,8 +315,10 @@ type: feat | fix | refactor | test | docs | chore
 
 ## 11. 참고 자료
 
-- 과제 안내문: `DP Term Project 2026 Life Game - updated-4.pdf` (10-13 업데이트판)
-- Holub Life Game: <https://holub.com/software/life/index.html>
+> 링크별 내용과 활용 방안: [`docs/reference/resources.md`](docs/reference/resources.md)
+
+- 과제 안내문: `DP Term Project 2026 Life Game - updated-4.pdf` (10-13 업데이트판, 저장소에는 올리지 않음)
+- Holub Life Game: <https://holub.com/software/life/index.html> — 원본 [`HolubLife.jar`](https://holub.com/software/life/HolubLife.jar)
 - Allen Holub, *Holub on Patterns: Learning Design Patterns by Looking at Code* (Apress, 2004)
 - Bitstorm Game of Life: <https://bitstorm.org/gameoflife/standalone/>
 - Math.com — Life: <http://www.math.com/students/wonders/life/life.html>
