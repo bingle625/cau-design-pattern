@@ -73,6 +73,7 @@
 ## 3. 원본 Holub Life Game 분석
 
 > 원본: [`HolubLife.jar`](https://holub.com/software/life/HolubLife.jar) v1.02 (2005-07-16). `src/main/java/com/holub/**`에 원본 그대로 반입함 (커밋 `ef7d962`).
+> **동작 원리, 다이어그램, 패턴, 개선 포인트 상세 분석: [`docs/holub-life-overview.md`](docs/holub-life-overview.md)**
 > 출처, 링크, 아이디어 정리는 [`docs/reference/resources.md`](docs/reference/resources.md) 참고.
 
 ### 주요 패키지
@@ -208,6 +209,7 @@ TBD
 │   ├── main/java/          # 원본 + 확장 소스
 │   └── test/java/          # JUnit 테스트
 ├── docs/
+│   ├── holub-life-overview.md  # 원본 Holub Life 분석 (Before 기준)
 │   ├── design-decisions/   # 설계 결정 기록 (문제·대안·장단점·결정)
 │   ├── uml/                # 클래스·시퀀스·상태·유스케이스 다이어그램
 │   ├── screenshots/        # 테스트 결과, 실행 화면, GitHub 히스토리
